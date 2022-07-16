@@ -1,0 +1,10 @@
+version: "3.7"
+
+services:
+  easyocr:
+    build:
+      context: ./
+      dockerfile: Dockerfile_onnx
+    container_name: easyocr
+    volumes:
+      - "./:/app"
