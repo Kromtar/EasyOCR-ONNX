@@ -3,9 +3,9 @@ version: "3.7"
 services:
   easyocr:
     build:
-      context: ./
+      context: ./easyocr_hybrid_onnx
       dockerfile: Dockerfile_onnx
-    container_name: easyocr
+    container_name: easyocr_hybrid_onnx
     volumes:
       - "./:/app"
     # Remove all the "deploy" section in case you do not have access to CUDA acceleration.

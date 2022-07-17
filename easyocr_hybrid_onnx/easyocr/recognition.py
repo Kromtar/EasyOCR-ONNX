@@ -149,7 +149,7 @@ def recognizer_predict(model, converter, test_loader, batch_max_length,\
                     print('The Recognition Model is valid!')
 
             if r_onnx:
-                ort_session = onnxruntime.InferenceSession("easyocr/onnx_models/recognition_model.onnx")
+                ort_session = onnxruntime.InferenceSession("easyocr_hybrid_onnx/easyocr/onnx_models/recognition_model.onnx")
                 ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(image)}
                 ort_outs = ort_session.run(None, ort_inputs)
                 preds = torch.from_numpy(ort_outs[0])
