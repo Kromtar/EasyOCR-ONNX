@@ -3,10 +3,12 @@
 ## Unofficial
 This repository is not an official EasyOCR team repository.
 
-## About the export tool
-The tools for exporting EasyOCR models to ONNX only work if you have access to a CUDA-accelerated Nvidia graphics card. We must have the corresponding drivers in **CUDA version 11** and working in coordination with Docker.
+This repository contains the environments and test scripts to export and use the EasyOCR models in ONNX format. A minor modification of EasyOCR is presented, where ONNX has been integrated (*easyocr_hybrid_onnx*). And another major modification of EasyOCR, where all PyTorch dependencies have been removed (*easyocr_only_onnx*).
 
-Alternatively, you can download the models already exported from this [Drive folder](https://drive.google.com/drive/folders/1n_LOrJHkMVcZhyCgg37PYMAcsJ7_Sxsn?usp=sharing). After downloading the models corresponding to the language you want to use, you have to leave the files in `onnx_models` folder using the names: `detection_model.onnx` and `recognition_model.onnx` accordingly.
+### Detail about the export tool in easyocr_hybrid_onnx
+The tools for exporting EasyOCR models to ONNX only work if you have access to a CUDA-accelerated Nvidia graphics card. We must have the corresponding drivers in **CUDA version 11** installed and working in coordination with Docker.
+
+Alternatively, you can download the models, already exported, from this [Drive folder](https://drive.google.com/drive/folders/1n_LOrJHkMVcZhyCgg37PYMAcsJ7_Sxsn?usp=sharing). After downloading the models corresponding to the language you want to use, you have to leave the files in `onnx_models` folder using the names: `detection_model.onnx` and `recognition_model.onnx` accordingly.
 
 Model export assumes: 
 - That only 1 batch will be worked with. Tests have not yet been performed in order to have models that support multiple barch.

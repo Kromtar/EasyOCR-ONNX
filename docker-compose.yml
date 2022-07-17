@@ -31,3 +31,18 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+  
+  easyocr_compare_onnx:
+    build:
+      context: ./
+      dockerfile: Dockerfile_easyocr_compare_onnx
+    container_name: easyocr_compare_onnx
+    volumes:
+      - "./:/app"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

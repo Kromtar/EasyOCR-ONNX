@@ -196,15 +196,18 @@ def recognizer_predict(model, converter, test_loader, batch_max_length,\
 
 def get_recognizer(recog_network, network_params, character,\
                    separator_list, dict_list, model_path,\
-                   device = 'cpu', quantize = True):
+                   device = 'cpu', quantize = True, customEasyOcrModulePath = ""):
 
     converter = CTCLabelConverter(character, separator_list, dict_list)
     num_class = len(converter.character)
 
+    if customEasyOcrModulePath != "":
+        customEasyOcrModulePath = customEasyOcrModulePath + "."
+
     if recog_network == 'generation1':
-        model_pkg = importlib.import_module("easyocr.model.model")
+        model_pkg = importlib.import_module(customEasyOcrModulePath+"easyocr.model.model")
     elif recog_network == 'generation2':
-        model_pkg = importlib.import_module("easyocr.model.vgg_model")
+        model_pkg = importlib.import_module(customEasyOcrModulePath+"easyocr.model.vgg_model")
     else:
         model_pkg = importlib.import_module(recog_network)
     model = model_pkg.Model(num_class=num_class, **network_params)
