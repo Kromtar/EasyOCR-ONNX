@@ -8,3 +8,10 @@ services:
     container_name: easyocr
     volumes:
       - "./:/app"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

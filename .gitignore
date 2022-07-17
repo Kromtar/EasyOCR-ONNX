@@ -107,3 +107,6 @@ ENV/
 .vscode/
 .vs/
 .idea/
+
+# ONNX Models
+*.onnx

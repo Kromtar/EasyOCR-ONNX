@@ -22,7 +22,7 @@ RUN curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-
 COPY ./pyproject.toml ./poetry.lock* ./
 
 RUN poetry install --no-root
-RUN poe force-torch
+RUN poe force-torch-cuda11
 
 COPY . ./
 ENV PYTHONPATH=/app

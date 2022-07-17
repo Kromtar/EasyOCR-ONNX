@@ -9,6 +9,7 @@ from collections import OrderedDict
 import importlib
 from .utils import CTCLabelConverter
 import math
+
 import onnx
 
 def custom_mean(x):
@@ -110,7 +111,7 @@ def recognizer_predict(model, converter, test_loader, batch_max_length,\
             text_for_pred = torch.LongTensor(batch_size, batch_max_length + 1).fill_(0).to(device)
 
             preds = model(image, text_for_pred)
-
+            
             # ----- #
             batch_size_1_1 = 500
             in_shape_1=[1, 1, 64, batch_size_1_1]
@@ -127,22 +128,21 @@ def recognizer_predict(model, converter, test_loader, batch_max_length,\
             torch.onnx.export(
                 model.module,
                 dummy_input,
-                "recognitionModel.onnx",
+                "recognition_model.onnx",
                 export_params=True,
-                opset_version=12,
+                opset_version=11,
                 input_names = ['input1','input2'],
                 output_names = ['output'],
-                dynamic_axes={'input1' : {3 : 'batch_size_1_1'}},
-                do_constant_folding=False
+                dynamic_axes={'input1' : {3 : 'batch_size_1_1'}, 'input2': {1: 'batch_size_2_1'}},
             )
-
-            onnx_model = onnx.load("recognitionModel.onnx")
+            
+            onnx_model = onnx.load("recognition_model.onnx")
             try:
                 onnx.checker.check_model(onnx_model)
             except onnx.checker.ValidationError as e:
                 print('The model is invalid: %s' % e)
             else:
-                print('The model is valid!')
+                print('The Recognition Model is valid!')
             # ----- #
 
             # Select max probabilty (greedy decoding) then decode index to character

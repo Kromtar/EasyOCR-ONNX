@@ -3,12 +3,13 @@ import torch.backends.cudnn as cudnn
 from torch.autograd import Variable
 from PIL import Image
 from collections import OrderedDict
-
 import cv2
 import numpy as np
 from .craft_utils import getDetBoxes, adjustResultCoordinates
 from .imgproc import resize_aspect_ratio, normalizeMeanVariance
 from .craft import CRAFT
+
+import onnx
 
 def copyStateDict(state_dict):
     if list(state_dict.keys())[0].startswith("module"):
@@ -45,6 +46,33 @@ def test_net(canvas_size, mag_ratio, net, image, text_threshold, link_threshold,
     with torch.no_grad():
         y, feature = net(x)
 
+        #----#
+        height = 500
+        width = 500
+        in_shape=[1, 3, height, width]
+        dummy_input = torch.rand(in_shape)
+        dummy_input = dummy_input.to(device)
+
+        torch.onnx.export(
+            net.module,
+            dummy_input,
+            "detection_model.onnx",
+            export_params=True,
+            opset_version=11,
+            input_names = ['input1'],
+            output_names = ['output'],
+            dynamic_axes={'input1' : {2 : 'height', 3: 'width'}},
+        )
+        
+        onnx_model = onnx.load("detection_model.onnx")
+        try:
+            onnx.checker.check_model(onnx_model)
+        except onnx.checker.ValidationError as e:
+            print('The model is invalid: %s' % e)
+        else:
+            print('The Detection Model is valid!')
+        #----#
+        
     boxes_list, polys_list = [], []
     for out in y:
         # make score and link map
