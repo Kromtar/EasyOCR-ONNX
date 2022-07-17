@@ -1,14 +1,29 @@
 version: "3.7"
 
 services:
-  easyocr:
+  easyocr_hybrid_onnx:
     build:
-      context: ./easyocr_hybrid_onnx
-      dockerfile: Dockerfile_onnx
+      context: ./
+      dockerfile: Dockerfile_easyocr_hybrid_onnx
     container_name: easyocr_hybrid_onnx
     volumes:
       - "./:/app"
     # Remove all the "deploy" section in case you do not have access to CUDA acceleration.
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  easyocr_only_onnx:
+    build:
+      context: ./
+      dockerfile: Dockerfile_easyocr_only_onnx
+    container_name: easyocr_only_onnx
+    volumes:
+      - "./:/app"
     deploy:
       resources:
         reservations:

@@ -8,7 +8,7 @@ lang = input("Language:")
 reader = easyocr.Reader([lang], gpu=True)
 reader.readtext('easyocr_hybrid_onnx/dummyImg.jpg', onnx_export=True)
 
-os.rename("detection_model.onnx","easyocr_hybrid_onnx/easyocr/onnx_models/detection_model.onnx")
-os.rename("recognition_model.onnx","easyocr_hybrid_onnx/easyocr/onnx_models/recognition_model.onnx")
+os.rename("detection_model.onnx","onnx_models/detection_model.onnx")
+os.rename("recognition_model.onnx","onnx_models/recognition_model.onnx")
 
 print("Ready")

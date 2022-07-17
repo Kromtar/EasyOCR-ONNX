@@ -77,7 +77,7 @@ def test_net(canvas_size, mag_ratio, net, image, text_threshold, link_threshold,
                 print('The Detection Model is valid!')
 
         if r_onnx:
-            ort_session = onnxruntime.InferenceSession("easyocr_hybrid_onnx/easyocr/onnx_models/detection_model.onnx")
+            ort_session = onnxruntime.InferenceSession("onnx_models/detection_model.onnx")
             ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
             ort_outs = ort_session.run(None, ort_inputs)
             yOnnx = ort_outs[0]

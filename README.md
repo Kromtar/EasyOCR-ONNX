@@ -6,7 +6,7 @@ This repository is not an official EasyOCR team repository.
 ## About the export tool
 The tools for exporting EasyOCR models to ONNX only work if you have access to a CUDA-accelerated Nvidia graphics card. We must have the corresponding drivers in **CUDA version 11** and working in coordination with Docker.
 
-Alternatively, you can download the models already exported from this [Drive folder](https://drive.google.com/drive/folders/1n_LOrJHkMVcZhyCgg37PYMAcsJ7_Sxsn?usp=sharing). After downloading the models corresponding to the language you want to use, you have to leave the files in `easyocr_hybrid_onnx/easyocr/onnx_models` using the names: `detection_model.onnx` and `recognition_model.onnx` accordingly.
+Alternatively, you can download the models already exported from this [Drive folder](https://drive.google.com/drive/folders/1n_LOrJHkMVcZhyCgg37PYMAcsJ7_Sxsn?usp=sharing). After downloading the models corresponding to the language you want to use, you have to leave the files in `onnx_models` folder using the names: `detection_model.onnx` and `recognition_model.onnx` accordingly.
 
 Model export assumes: 
 - That only 1 batch will be worked with. Tests have not yet been performed in order to have models that support multiple barch.
@@ -19,6 +19,7 @@ Model export assumes:
 ## Folders in easyocr_onnx branch
 - **easyocr_hybrid_onnx**: Slightly modified version of EasyOCR to be able to export and use ONNX models. Uses PyTorch to preprocess and postprocess model input and output data. It is possible to deactivate ONNX and use EasyOCR as normal.
 - **easyocr_only_onnx**: TODO: Highly modified version of EasyOCR that completely eliminates the use of PyTorch.
+- **onxx_models**: Place where exported models are saved when using "easyocr_hybrid_onnx". The detection and recognition model **must be** present here for both, "easyocr_hybrid_onnx" and "easyocr_only_onnx" to function correctly.
 
 ## Requirements
 - Docker
@@ -39,15 +40,24 @@ To ensure that you have CUDA correctly installed use the command: `nvidia-smi`. 
 Docker-compose raises two containers, one for each way to incorporate ONNX in EasyOCR:
 
 - **easyocr_hybrid_onnx**: Slightly modified version of EasyOCR to be able to export and use ONNX models. Uses PyTorch to preprocess and postprocess model input and output data. It is possible to deactivate ONNX and use EasyOCR as normal.
-- **easyocr_only_onnx**: TODO: Highly modified version of EasyOCR that completely eliminates the use of PyTorch.
+- **easyocr_only_onnx**: (WORK IN PROGRESS) Highly modified version of EasyOCR that completely eliminates the use of PyTorch.
+- **easypcr_compare_onnx**: (TODO) Environment where easyocr_hybrid_onnx and easyocr_only_onnx can be used to compare results.
 
-### Interacting
+### Interacting with easyocr_hybrid_onnx
 
-1. Enter to the container terminal: `docker exec -ti easyocr_hybrid_onnx /bin/bash`
+1. In a new terminal, enter to the container shell: `docker exec -ti easyocr_hybrid_onnx /bin/bash`
 
-- Run `python3 easyocr_hybrid_onnx/onnx_export.py` to export models. The exported models will be stored in: `easyocr_hybrid_onnx/easyocr/onnx_models`. Now the method *readtext* has the *onnx_export* (bool) parameter to enable or disable the export of the ONNX model. Exporting will fail if you do not have CUDA.
+- Run `python3 easyocr_hybrid_onnx/onnx_export.py` to export models. The exported models will be stored in: `onnx_models` folder. Now the method *readtext* has the *onnx_export* (bool) parameter to enable or disable the export of the ONNX model. Exporting will fail if you do not have CUDA.
 
 - Run `python3 easyocr_hybrid_onnx/easyocr_with_onnx_model.py` to use EasyOCR with ONNX models. Now the method *readtext* has the *onnx* (bool) parameter to enable or disable the use of ONNX models.
+
+### Interacting with easyocr_only_onnx
+
+(WORK IN PROGRESS)
+
+### Interacting with easypcr_compare_onnx
+
+(TODO)
 
 ## Additional comments
 

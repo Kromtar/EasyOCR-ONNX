@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "easyocr_only_onnx"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+Pillow = "8.2.0"
+opencv-contrib-python = "4.4.0.46"
+scikit-image = "0.19.1"
+typing-extensions = "^4.2.0"
+protobuf = "3.20.0"
+onnxruntime = "^1.11.1"
+PyYAML = "^6.0"
+python-bidi = "^0.4.2"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
