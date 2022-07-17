@@ -10,6 +10,10 @@ from .imgproc import resize_aspect_ratio, normalizeMeanVariance
 from .craft import CRAFT
 
 import onnx
+import onnxruntime
+
+def to_numpy(tensor):
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
 
 def copyStateDict(state_dict):
     if list(state_dict.keys())[0].startswith("module"):
@@ -22,7 +26,7 @@ def copyStateDict(state_dict):
         new_state_dict[name] = v
     return new_state_dict
 
-def test_net(canvas_size, mag_ratio, net, image, text_threshold, link_threshold, low_text, poly, device, estimate_num_chars=False):
+def test_net(canvas_size, mag_ratio, net, image, text_threshold, link_threshold, low_text, poly, device, estimate_num_chars=False, r_onnx=False, onnx_export=False):
     if isinstance(image, np.ndarray) and len(image.shape) == 4:  # image is batch of np arrays
         image_arrs = image
     else:                                                        # image is single numpy array
@@ -46,38 +50,50 @@ def test_net(canvas_size, mag_ratio, net, image, text_threshold, link_threshold,
     with torch.no_grad():
         y, feature = net(x)
 
-        #----#
-        height = 500
-        width = 500
-        in_shape=[1, 3, height, width]
-        dummy_input = torch.rand(in_shape)
-        dummy_input = dummy_input.to(device)
+        if onnx_export:
+            height = 500
+            width = 500
+            in_shape=[1, 3, height, width]
+            dummy_input = torch.rand(in_shape)
+            dummy_input = dummy_input.to(device)
 
-        torch.onnx.export(
-            net.module,
-            dummy_input,
-            "detection_model.onnx",
-            export_params=True,
-            opset_version=11,
-            input_names = ['input1'],
-            output_names = ['output'],
-            dynamic_axes={'input1' : {2 : 'height', 3: 'width'}},
-        )
-        
-        onnx_model = onnx.load("detection_model.onnx")
-        try:
-            onnx.checker.check_model(onnx_model)
-        except onnx.checker.ValidationError as e:
-            print('The model is invalid: %s' % e)
-        else:
-            print('The Detection Model is valid!')
-        #----#
+            torch.onnx.export(
+                net.module,
+                dummy_input,
+                "detection_model.onnx",
+                export_params=True,
+                opset_version=11,
+                input_names = ['input1'],
+                output_names = ['output'],
+                dynamic_axes={'input1' : {2 : 'height', 3: 'width'}},
+            )
+            
+            onnx_model = onnx.load("detection_model.onnx")
+            try:
+                onnx.checker.check_model(onnx_model)
+            except onnx.checker.ValidationError as e:
+                print('The model is invalid: %s' % e)
+            else:
+                print('The Detection Model is valid!')
+
+        if r_onnx:
+            ort_session = onnxruntime.InferenceSession("easyocr/onnx_models/detection_model.onnx")
+            ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(x)}
+            ort_outs = ort_session.run(None, ort_inputs)
+            yOnnx = ort_outs[0]
+            y = yOnnx
+
         
     boxes_list, polys_list = [], []
     for out in y:
-        # make score and link map
-        score_text = out[:, :, 0].cpu().data.numpy()
-        score_link = out[:, :, 1].cpu().data.numpy()
+
+        if r_onnx:
+            score_text = out[:, :, 0]
+            score_link = out[:, :, 1]
+        else:
+            # make score and link map
+            score_text = out[:, :, 0].cpu().data.numpy()
+            score_link = out[:, :, 1].cpu().data.numpy()
 
         # Post-processing
         boxes, polys, mapper = getDetBoxes(
@@ -117,13 +133,13 @@ def get_detector(trained_model, device='cpu', quantize=True, cudnn_benchmark=Fal
     net.eval()
     return net
 
-def get_textbox(detector, image, canvas_size, mag_ratio, text_threshold, link_threshold, low_text, poly, device, optimal_num_chars=None):
+def get_textbox(detector, image, canvas_size, mag_ratio, text_threshold, link_threshold, low_text, poly, device, optimal_num_chars=None, onnx=False, onnx_export=False):
     result = []
     estimate_num_chars = optimal_num_chars is not None
     bboxes_list, polys_list = test_net(canvas_size, mag_ratio, detector,
                                        image, text_threshold,
                                        link_threshold, low_text, poly,
-                                       device, estimate_num_chars)
+                                       device, estimate_num_chars, r_onnx=onnx, onnx_export=onnx_export)
     if estimate_num_chars:
         polys_list = [[p for p, _ in sorted(polys, key=lambda x: abs(optimal_num_chars - x[1]))]
                       for polys in polys_list]

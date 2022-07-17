@@ -271,14 +271,14 @@ class Reader(object):
     def detect(self, img, min_size = 20, text_threshold = 0.7, low_text = 0.4,\
                link_threshold = 0.4,canvas_size = 2560, mag_ratio = 1.,\
                slope_ths = 0.1, ycenter_ths = 0.5, height_ths = 0.5,\
-               width_ths = 0.5, add_margin = 0.1, reformat=True, optimal_num_chars=None):
+               width_ths = 0.5, add_margin = 0.1, reformat=True, optimal_num_chars=None, onnx=False, onnx_export=False):
 
         if reformat:
             img, img_cv_grey = reformat_input(img)
 
         text_box_list = get_textbox(self.detector, img, canvas_size, mag_ratio,
                                     text_threshold, link_threshold, low_text,
-                                    False, self.device, optimal_num_chars)
+                                    False, self.device, optimal_num_chars, onnx=onnx, onnx_export=onnx_export)
 
         horizontal_list_agg, free_list_agg = [], []
         for text_box in text_box_list:
@@ -301,7 +301,7 @@ class Reader(object):
                   workers = 0, allowlist = None, blocklist = None, detail = 1,\
                   rotation_info = None,paragraph = False,\
                   contrast_ths = 0.1,adjust_contrast = 0.5, filter_ths = 0.003,\
-                  y_ths = 0.5, x_ths = 1.0, reformat=True, output_format='standard'):
+                  y_ths = 0.5, x_ths = 1.0, reformat=True, output_format='standard', onnx=False, onnx_export=False):
 
         if reformat:
             img, img_cv_grey = reformat_input(img_cv_grey)
@@ -329,7 +329,7 @@ class Reader(object):
                 image_list, max_width = get_image_list(h_list, f_list, img_cv_grey, model_height = imgH)
                 result0 = get_text(self.character, imgH, int(max_width), self.recognizer, self.converter, image_list,\
                               ignore_char, decoder, beamWidth, batch_size, contrast_ths, adjust_contrast, filter_ths,\
-                              workers, self.device)
+                              workers, self.device, onnx=onnx, onnx_export=onnx_export)
                 result += result0
             for bbox in free_list:
                 h_list = []
@@ -337,7 +337,7 @@ class Reader(object):
                 image_list, max_width = get_image_list(h_list, f_list, img_cv_grey, model_height = imgH)
                 result0 = get_text(self.character, imgH, int(max_width), self.recognizer, self.converter, image_list,\
                               ignore_char, decoder, beamWidth, batch_size, contrast_ths, adjust_contrast, filter_ths,\
-                              workers, self.device)
+                              workers, self.device, onnx=onnx, onnx_export=onnx_export)
                 result += result0
         # default mode will try to process multiple boxes at the same time
         else:
@@ -349,7 +349,7 @@ class Reader(object):
 
             result = get_text(self.character, imgH, int(max_width), self.recognizer, self.converter, image_list,\
                           ignore_char, decoder, beamWidth, batch_size, contrast_ths, adjust_contrast, filter_ths,\
-                          workers, self.device)
+                          workers, self.device,onnx=onnx, onnx_export=onnx_export)
 
             if rotation_info and (horizontal_list+free_list):
                 # Reshape result to be a list of lists, each row being for 
@@ -382,7 +382,7 @@ class Reader(object):
                  text_threshold = 0.7, low_text = 0.4, link_threshold = 0.4,\
                  canvas_size = 2560, mag_ratio = 1.,\
                  slope_ths = 0.1, ycenter_ths = 0.5, height_ths = 0.5,\
-                 width_ths = 0.5, y_ths = 0.5, x_ths = 1.0, add_margin = 0.1, output_format='standard'):
+                 width_ths = 0.5, y_ths = 0.5, x_ths = 1.0, add_margin = 0.1, output_format='standard', onnx=False, onnx_export=False):
         '''
         Parameters:
         image: file path or numpy-array or a byte stream object
@@ -394,14 +394,14 @@ class Reader(object):
                                                  canvas_size, mag_ratio,\
                                                  slope_ths, ycenter_ths,\
                                                  height_ths,width_ths,\
-                                                 add_margin, False)
+                                                 add_margin, False, onnx=onnx, onnx_export=onnx_export)
         # get the 1st result from hor & free list as self.detect returns a list of depth 3
         horizontal_list, free_list = horizontal_list[0], free_list[0]
         result = self.recognize(img_cv_grey, horizontal_list, free_list,\
                                 decoder, beamWidth, batch_size,\
                                 workers, allowlist, blocklist, detail, rotation_info,\
                                 paragraph, contrast_ths, adjust_contrast,\
-                                filter_ths, y_ths, x_ths, False, output_format)
+                                filter_ths, y_ths, x_ths, False, output_format, onnx=onnx, onnx_export=onnx_export)
 
         return result
     

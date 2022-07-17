@@ -11,6 +11,10 @@ from .utils import CTCLabelConverter
 import math
 
 import onnx
+import onnxruntime
+
+def to_numpy(tensor):
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
 
 def custom_mean(x):
     return x.prod()**(2.0/np.sqrt(len(x)))
@@ -99,7 +103,7 @@ class AlignCollate(object):
         return image_tensors
 
 def recognizer_predict(model, converter, test_loader, batch_max_length,\
-                       ignore_idx, char_group_idx, decoder = 'greedy', beamWidth= 5, device = 'cpu'):
+                       ignore_idx, char_group_idx, decoder = 'greedy', beamWidth= 5, device = 'cpu', r_onnx=False, onnx_export=False):
     model.eval()
     result = []
     with torch.no_grad():
@@ -112,38 +116,43 @@ def recognizer_predict(model, converter, test_loader, batch_max_length,\
 
             preds = model(image, text_for_pred)
             
-            # ----- #
-            batch_size_1_1 = 500
-            in_shape_1=[1, 1, 64, batch_size_1_1]
-            dummy_input_1 = torch.rand(in_shape_1)
-            dummy_input_1 = dummy_input_1.to(device)
+            if onnx_export:
+                batch_size_1_1 = 500
+                in_shape_1=[1, 1, 64, batch_size_1_1]
+                dummy_input_1 = torch.rand(in_shape_1)
+                dummy_input_1 = dummy_input_1.to(device)
 
-            batch_size_2_1 = 50
-            in_shape_2=[1, batch_size_2_1]
-            dummy_input_2 = torch.rand(in_shape_2)
-            dummy_input_2 = dummy_input_2.to(device)
+                batch_size_2_1 = 50
+                in_shape_2=[1, batch_size_2_1]
+                dummy_input_2 = torch.rand(in_shape_2)
+                dummy_input_2 = dummy_input_2.to(device)
 
-            dummy_input = (dummy_input_1, dummy_input_2)
+                dummy_input = (dummy_input_1, dummy_input_2)
 
-            torch.onnx.export(
-                model.module,
-                dummy_input,
-                "recognition_model.onnx",
-                export_params=True,
-                opset_version=11,
-                input_names = ['input1','input2'],
-                output_names = ['output'],
-                dynamic_axes={'input1' : {3 : 'batch_size_1_1'}, 'input2': {1: 'batch_size_2_1'}},
-            )
-            
-            onnx_model = onnx.load("recognition_model.onnx")
-            try:
-                onnx.checker.check_model(onnx_model)
-            except onnx.checker.ValidationError as e:
-                print('The model is invalid: %s' % e)
-            else:
-                print('The Recognition Model is valid!')
-            # ----- #
+                torch.onnx.export(
+                    model.module,
+                    dummy_input,
+                    "recognition_model.onnx",
+                    export_params=True,
+                    opset_version=11,
+                    input_names = ['input1','input2'],
+                    output_names = ['output'],
+                    dynamic_axes={'input1' : {3 : 'batch_size_1_1'}, 'input2': {1: 'batch_size_2_1'}},
+                )
+                
+                onnx_model = onnx.load("recognition_model.onnx")
+                try:
+                    onnx.checker.check_model(onnx_model)
+                except onnx.checker.ValidationError as e:
+                    print('The model is invalid: %s' % e)
+                else:
+                    print('The Recognition Model is valid!')
+
+            if r_onnx:
+                ort_session = onnxruntime.InferenceSession("easyocr/onnx_models/recognition_model.onnx")
+                ort_inputs = {ort_session.get_inputs()[0].name: to_numpy(image)}
+                ort_outs = ort_session.run(None, ort_inputs)
+                preds = torch.from_numpy(ort_outs[0])
 
             # Select max probabilty (greedy decoding) then decode index to character
             preds_size = torch.IntTensor([preds.size(1)] * batch_size)
@@ -220,7 +229,7 @@ def get_recognizer(recog_network, network_params, character,\
 
 def get_text(character, imgH, imgW, recognizer, converter, image_list,\
              ignore_char = '',decoder = 'greedy', beamWidth =5, batch_size=1, contrast_ths=0.1,\
-             adjust_contrast=0.5, filter_ths = 0.003, workers = 1, device = 'cpu'):
+             adjust_contrast=0.5, filter_ths = 0.003, workers = 1, device = 'cpu', onnx=False, onnx_export=False):
     batch_max_length = int(imgW/10)
 
     char_group_idx = {}
@@ -239,7 +248,7 @@ def get_text(character, imgH, imgW, recognizer, converter, image_list,\
 
     # predict first round
     result1 = recognizer_predict(recognizer, converter, test_loader,batch_max_length,\
-                                 ignore_idx, char_group_idx, decoder, beamWidth, device = device)
+                                 ignore_idx, char_group_idx, decoder, beamWidth, device = device, r_onnx = onnx, onnx_export = onnx_export)
 
     # predict second round
     low_confident_idx = [i for i,item in enumerate(result1) if (item[1] < contrast_ths)]
@@ -251,7 +260,7 @@ def get_text(character, imgH, imgW, recognizer, converter, image_list,\
                         test_data, batch_size=batch_size, shuffle=False,
                         num_workers=int(workers), collate_fn=AlignCollate_contrast, pin_memory=True)
         result2 = recognizer_predict(recognizer, converter, test_loader, batch_max_length,\
-                                     ignore_idx, char_group_idx, decoder, beamWidth, device = device)
+                                     ignore_idx, char_group_idx, decoder, beamWidth, device = device, r_onnx = onnx, onnx_export = onnx_export)
 
     result = []
     for i, zipped in enumerate(zip(coord, result1)):

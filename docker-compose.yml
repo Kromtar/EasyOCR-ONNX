@@ -8,6 +8,7 @@ services:
     container_name: easyocr
     volumes:
       - "./:/app"
+    # Remove all the "deploy" section in case you do not have access to CUDA acceleration.
     deploy:
       resources:
         reservations:
