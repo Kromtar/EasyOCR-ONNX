@@ -20,7 +20,7 @@ Model export assumes:
 
 ## Folders in easyocr_onnx branch
 - **easyocr_hybrid_onnx**: Slightly modified version of EasyOCR to be able to export and use ONNX models. Uses PyTorch to preprocess and postprocess model input and output data. It is possible to deactivate ONNX and use EasyOCR as normal.
-- **easyocr_only_onnx**: TODO: Highly modified version of EasyOCR that completely eliminates the use of PyTorch.
+- **easyocr_only_onnx**: (WORK IN PROGRESS) Highly modified version of EasyOCR that completely eliminates the use of PyTorch.
 - **onxx_models**: Place where exported models are saved when using "easyocr_hybrid_onnx". The detection and recognition model **must be** present here for both, "easyocr_hybrid_onnx" and "easyocr_only_onnx" to function correctly.
 
 ## Requirements
@@ -43,7 +43,7 @@ Docker-compose raises two containers, one for each way to incorporate ONNX in Ea
 
 - **easyocr_hybrid_onnx**: Slightly modified version of EasyOCR to be able to export and use ONNX models. Uses PyTorch to preprocess and postprocess model input and output data. It is possible to deactivate ONNX and use EasyOCR as normal.
 - **easyocr_only_onnx**: (WORK IN PROGRESS) Highly modified version of EasyOCR that completely eliminates the use of PyTorch.
-- **easypcr_compare_onnx**: (TODO) Environment where easyocr_hybrid_onnx and easyocr_only_onnx can be used to compare results.
+- **easypcr_compare_onnx**: Environment where easyocr_hybrid_onnx and easyocr_only_onnx can be used to compare results.
 
 ### Interacting with easyocr_hybrid_onnx
 
@@ -59,7 +59,12 @@ Docker-compose raises two containers, one for each way to incorporate ONNX in Ea
 
 ### Interacting with easypcr_compare_onnx
 
-(TODO)
+1. In a new terminal, enter to the container shell: `docker exec -ti easyocr_compare_onnx /bin/bash`
+2. Check that you have the correct language ONNX models in: `onnx_models` (`detection_model.onnx` and `recognition_model.onnx`). If you don't have the models yet, use `python3 easyocr_hybrid_onnx/onnx_export.py`.
+3. Edit in `compare.py` the language to use and the image to be tested. (Put the image in the root directory of the project).
+4. Run `python3 compare.py`
+
+The result issued by both, standard EasyOCR (PyTorch) and EasyOCR using only ONNX, will be displayed.
 
 ## Additional comments
 

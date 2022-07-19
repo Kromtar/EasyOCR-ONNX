@@ -2,33 +2,36 @@ import numpy as np
 import easyocr_hybrid_onnx.easyocr as easyocr_hybrid_onnx
 import easyocr_only_onnx.easyocr as easyocr_only_onnx
 
-reader1 = easyocr_hybrid_onnx.Reader(["ja"], gpu=True, customEasyOcrModulePath="easyocr_hybrid_onnx")
-reader2 = easyocr_only_onnx.Reader(["ja"], gpu=True)
+leng = "en"
+images = ["dummyImg.jpg"]
 
-images = ["img9.jpg"]
+reader1 = easyocr_hybrid_onnx.Reader([leng], gpu=True, customEasyOcrModulePath="easyocr_hybrid_onnx")
+reader2 = easyocr_only_onnx.Reader([leng], gpu=True)
 
 for img in images:
 
     r1 = reader1.readtext(img, onnx=False)
     r2 = reader2.readtext(img)
 
-    #Valida mismo numero de conjunto de caracteres
+    #Validates same number of character groups
     if len(r1) == len(r2):
         for g1, g2 in zip(r1, r2):
-            #Compara zona de caracteres
+            #Compare character cut zone (detector model)
             if np.array_equal(g1[0],g2[0]):
-                print("Mismas zonas de caracteres")
+                print("Same character cut zones")
             else:
-                print("Distintas zonas de caracters")
-            #Compara caracteres
+                print("Different character cut zones")
+            #Compare character
+            print("Standard EasyOCR:", g1[1])
+            print("Only ONNX EasyOCR:",g2[1])
             if g1[1] == g2[1]:
-                print("Mismo conjunto de caractres")
+                print("Same characters")
             else:
-                print("El conjunto de caracteres tiene diferencia")
-            print(g1[1])
-            print(g2[1])
-            #Compara presiciones
+                print("Different characters")
+            #Compares accuracy
+            print("Standard EasyOCR:",g1[2])
+            print("Only ONNX EasyOCR:",g2[2])
             diff = abs(g1[2] - g2[2])
-            print("La diferencia de presicion es:", diff)
+            print("The difference in accuracy is:", diff)
     else:
-        print("No se ha detectado el mismo numero de conjuntos de caracteres")
+        print("Different character cut zones count")
