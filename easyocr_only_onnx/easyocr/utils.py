@@ -311,11 +311,7 @@ class CTCLabelConverter(object):
         texts = []
         index = 0
         for l in length:
-            print(l)
-            print(index)
-            print(text_index)
             t = text_index[index:index + l]
-            print(t)
             # Returns a boolean array where true is when the value is not repeated
             a = np.insert(~((t[1:]==t[:-1])),0,True)
             # Returns a boolean array where true is when the value is not in the ignore_idx list

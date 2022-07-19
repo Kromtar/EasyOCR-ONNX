@@ -44,15 +44,15 @@ def test_net(canvas_size, mag_ratio, net, image, text_threshold, link_threshold,
 
     start_time = time.time()
     ort_session = onnxruntime.InferenceSession("onnx_models/detection_model.onnx")
-    print("--- %s seconds ---" % (time.time() - start_time))
+    # print("--- %s seconds ---" % (time.time() - start_time))
 
     start_time = time.time()
     ort_inputs = {ort_session.get_inputs()[0].name: x}
-    print("--- %s seconds ---" % (time.time() - start_time))
+    # print("--- %s seconds ---" % (time.time() - start_time))
 
     start_time = time.time()
     ort_outs = ort_session.run(None, ort_inputs)
-    print("--- %s seconds ---" % (time.time() - start_time))
+    # print("--- %s seconds ---" % (time.time() - start_time))
     
     y = ort_outs[0]
 

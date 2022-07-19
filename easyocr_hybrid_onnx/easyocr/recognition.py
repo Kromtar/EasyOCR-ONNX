@@ -134,10 +134,12 @@ def recognizer_predict(model, converter, test_loader, batch_max_length,\
                     dummy_input,
                     "recognition_model.onnx",
                     export_params=True,
-                    opset_version=11,
+                    opset_version=13,
                     input_names = ['input1','input2'],
                     output_names = ['output'],
+                    #TODO: Falta agregar output
                     dynamic_axes={'input1' : {3 : 'batch_size_1_1'}, 'input2': {1: 'batch_size_2_1'}},
+                    do_constant_folding=True,
                 )
                 
                 onnx_model = onnx.load("recognition_model.onnx")

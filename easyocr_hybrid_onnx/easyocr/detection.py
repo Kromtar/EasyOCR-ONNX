@@ -62,10 +62,11 @@ def test_net(canvas_size, mag_ratio, net, image, text_threshold, link_threshold,
                 dummy_input,
                 "detection_model.onnx",
                 export_params=True,
-                opset_version=11,
+                opset_version=13,
                 input_names = ['input1'],
                 output_names = ['output'],
-                dynamic_axes={'input1' : {2 : 'height', 3: 'width'}},
+                dynamic_axes={'input1' : {2 : 'height', 3: 'width'}, 'output': {0: 'batch_size', 1: "dim1", 2: "dim2"}},
+                do_constant_folding=True,
             )
             
             onnx_model = onnx.load("detection_model.onnx")
@@ -83,7 +84,7 @@ def test_net(canvas_size, mag_ratio, net, image, text_threshold, link_threshold,
             yOnnx = ort_outs[0]
             y = yOnnx
 
-        
+
     boxes_list, polys_list = [], []
     for out in y:
 
